@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ConsoleApp1/ConsoleApp1.csproj" />
+  <Project Path="naps2-net80-1/naps2-net80-1.csproj" />
+  <Project Path="naps2-net80-2/naps2-net80-2.csproj" />
+</Solution>
