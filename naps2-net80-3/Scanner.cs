@@ -1,9 +1,15 @@
-using NAPS2.Images;
+﻿using NAPS2.Images;
 using NAPS2.Images.Gdi;
 using NAPS2.Pdf;
 using NAPS2.Scan;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace naps2_net80_1
+namespace naps2_net80_3
 {
     internal class Scanner
     {
@@ -13,18 +19,44 @@ namespace naps2_net80_1
         /// </summary>
         /// <param name="a_device">Display name of the scanner device to use.</param>
         /// <param name="a_outpdf">Full path of the PDF file to write.</param>
-        public static async Task ScanPdf(string a_device, string a_outpdf)
+        /// <returns>Empty string if successful, otherwise an error message.</returns>
+        public static async Task<string> ScanPdf(string a_device, string a_outpdf, string a_colorMode)
         {
+            string msg = string.Empty;
             var (device, driver, needsWorker) = await FindDevice(a_device);
 
             if (device == null)
-                throw new InvalidOperationException($"Device not found: '{a_device}'");
+            {
+                msg = $"Device not found: '{a_device}'";
+                return msg;
+            }
 
             using var scanningContext = new ScanningContext(new GdiImageContext());
             if (needsWorker)
                 scanningContext.SetUpWin32Worker();
 
             var controller = new ScanController(scanningContext);
+
+            BitDepth _bitDepth = BitDepth.Grayscale;
+            if (driver == Driver.Wia)   // WIA often doesn't support grayscale, so use color for WIA devices
+            {
+                _bitDepth |= BitDepth.Grayscale;
+            }
+            else
+            {
+                switch (a_colorMode.ToLower())
+                {
+                    case "color":
+                        _bitDepth = BitDepth.Color;
+                        break;
+                    case "bw":
+                        _bitDepth = BitDepth.Grayscale;
+                        break;
+                    default:
+                        _bitDepth = BitDepth.Grayscale;
+                        break;
+                }
+            }
 
             var options = new ScanOptions
             {
@@ -33,7 +65,7 @@ namespace naps2_net80_1
                 PaperSource = PaperSource.Duplex,
                 PageSize = PageSize.Letter,
                 Dpi = 300,
-                BitDepth = BitDepth.Grayscale
+                BitDepth = _bitDepth
             };
 
             var images = new List<ProcessedImage>();
@@ -43,7 +75,11 @@ namespace naps2_net80_1
                     images.Add(image);
 
                 if (images.Count == 0)
-                    throw new InvalidOperationException("No pages were scanned.");
+                {
+                    msg = "No pages were scanned.";
+                    Logger.Log(msg);
+                    return msg;
+                }
 
                 var outDir = Path.GetDirectoryName(a_outpdf);
                 if (!string.IsNullOrEmpty(outDir))
@@ -57,6 +93,7 @@ namespace naps2_net80_1
                 foreach (var image in images)
                     image.Dispose();
             }
+            return msg;
         }
 
         /// <summary>

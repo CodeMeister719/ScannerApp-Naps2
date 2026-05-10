@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "naps2-net80-3": {
+      "commandName": "Project",
+      "commandLineArgs": "--output \"C:\\temp\\ScannedImages\\z-scanGOOD.pdf\" --colorMode \"color\""
+    }
+  }
+}

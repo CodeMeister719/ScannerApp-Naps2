@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>naps2_net80_3</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AssemblyName>ScannerApp_x64</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAPS2.Images.Gdi" Version="1.2.1" />
+    <PackageReference Include="NAPS2.Sdk" Version="1.2.1" />
+    <PackageReference Include="NAPS2.Sdk.Worker.Win32" Version="1.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="fj-devicelist.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

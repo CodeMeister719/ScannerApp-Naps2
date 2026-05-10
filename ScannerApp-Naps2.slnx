@@ -2,4 +2,5 @@
   <Project Path="ConsoleApp1/ConsoleApp1.csproj" />
   <Project Path="naps2-net80-1/naps2-net80-1.csproj" />
   <Project Path="naps2-net80-2/naps2-net80-2.csproj" />
+  <Project Path="naps2-net80-3/naps2-net80-3.csproj" Id="2ae82e58-99db-4534-9ca0-7f4f8a3d7b1b" />
 </Solution>
