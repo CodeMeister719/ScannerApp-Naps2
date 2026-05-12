@@ -20,7 +20,7 @@ namespace naps2_net80_3
         /// <param name="a_device">Display name of the scanner device to use.</param>
         /// <param name="a_outpdf">Full path of the PDF file to write.</param>
         /// <returns>Empty string if successful, otherwise an error message.</returns>
-        public static async Task<string> ScanPdf(string a_device, string a_outpdf, string a_colorMode)
+        public static async Task<string> ScanPdf(string a_device, string a_outpdf, ScannerOptions a_scannerOptions)
         {
             string msg = string.Empty;
             var (device, driver, needsWorker) = await FindDevice(a_device);
@@ -33,7 +33,10 @@ namespace naps2_net80_3
 
             using var scanningContext = new ScanningContext(new GdiImageContext());
             if (needsWorker)
+            {
+                Logger.Log("Using 32-bit TWAIN driver via Win32 worker.");
                 scanningContext.SetUpWin32Worker();
+            }
 
             var controller = new ScanController(scanningContext);
 
@@ -44,13 +47,13 @@ namespace naps2_net80_3
             }
             else
             {
-                switch (a_colorMode.ToLower())
+                switch (a_scannerOptions.BitDepth.ToLower())
                 {
                     case "color":
                         _bitDepth = BitDepth.Color;
                         break;
                     case "bw":
-                        _bitDepth = BitDepth.Grayscale;
+                        _bitDepth = BitDepth.BlackAndWhite;
                         break;
                     default:
                         _bitDepth = BitDepth.Grayscale;
@@ -63,10 +66,13 @@ namespace naps2_net80_3
                 Device = device,
                 Driver = driver,
                 PaperSource = PaperSource.Duplex,
-                PageSize = PageSize.Letter,
-                Dpi = 300,
-                BitDepth = _bitDepth
+                PageSize = GetPageSize(a_scannerOptions.PageSize),                      //PageSize.Letter,
+                Dpi = int.TryParse(a_scannerOptions.Dpi, out int dpi) ? dpi : 300,
+                BitDepth = _bitDepth,
+                UseNativeUI = false
             };
+
+            options.TwainOptions.Dsm = TwainDsm.NewX64;
 
             var images = new List<ProcessedImage>();
             try
@@ -92,6 +98,8 @@ namespace naps2_net80_3
             {
                 foreach (var image in images)
                     image.Dispose();
+
+                scanningContext.Dispose();
             }
             return msg;
         }
@@ -174,5 +182,26 @@ namespace naps2_net80_3
 
             return (null, Driver.Default, false);
         }
+
+        private static PageSize GetPageSize(string pageSize)
+        {
+            return pageSize.ToLower() switch
+            {
+                "letter" => PageSize.Letter,
+                "legal" => PageSize.Legal,
+                "a4" => PageSize.A4,
+                _ => PageSize.Letter
+            };
+        }
+
+
+    }
+
+    internal class ScannerOptions
+    {
+        public string BitDepth { get; set; } = "color";
+        public string Dpi { get; set; } = "300";
+        public string PageSize { get; set; } = "letter";
+        public string Source { get; set; }  = "duplex";
     }
 }

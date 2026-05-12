@@ -2,7 +2,7 @@
   "profiles": {
     "naps2-net80-3": {
       "commandName": "Project",
-      "commandLineArgs": "--output \"C:\\temp\\ScannedImages\\z-scanGOOD.pdf\" --colorMode \"color\""
+      "commandLineArgs": "--output \"C:\\temp\\scannedimages\\z-scan.pdf\" --bitdepth color --dpi 300 --pagesize letter --source duplex"
     }
   }
 }

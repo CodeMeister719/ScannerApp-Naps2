@@ -8,9 +8,8 @@ namespace naps2_net80_3
         static async Task Main(string[] args)
         {
             string msg = string.Empty;
-            // Parse command line arguments
+            var scannerOptions = MainArgsScannerOptions(args);
             string output = GetArgValue(args, "--output", "");
-            string colorMode = GetArgValue(args, "--colormode", "gray");   
 
             // If output is empty, generate default path; if no extension, default to .pdf
             string outPdf = string.IsNullOrEmpty(output)
@@ -19,8 +18,13 @@ namespace naps2_net80_3
 
             // Initialize logging with the same path as output PDF but with .log extension
             Logger.Initialize(outPdf);
-            Logger.Log($"Greeting, Programs!");
+            Logger.Log($"--output {outPdf}");
+            Logger.Log($"--bitdepth {scannerOptions.BitDepth}");
+            Logger.Log($"--dpi {scannerOptions.Dpi}");
+            Logger.Log($"--pagesize {scannerOptions.PageSize}");
+            Logger.Log($"--source {scannerOptions.Source}");
 
+            // Get list of scanner devices found connected.
             var devices = await Scanner.GetDevicesAsync();
 
             if (devices.Count == 0)
@@ -34,6 +38,7 @@ namespace naps2_net80_3
                 foreach (var device in devices)
                      Logger.Log($"{device}");
 
+                // Get the first device that matches any of the targets specified in the fj-devicelist.txt file (case-insensitive substring match).
                 var targets = DeviceListFromFile();
                 var selectedDevice = devices.FirstOrDefault(d =>
                     targets.Any(t => d.Name.Contains(t, StringComparison.OrdinalIgnoreCase)));
@@ -46,7 +51,7 @@ namespace naps2_net80_3
                 else
                 {
                     Logger.Log($"Selected device: {selectedDevice.Name}");
-                    msg = await Scanner.ScanPdf(selectedDevice.Name, outPdf, colorMode);
+                    msg = await Scanner.ScanPdf(selectedDevice.Name, outPdf, scannerOptions);
                     if (!string.IsNullOrEmpty(msg))
                     {
                         msg = $"Scan failed: {msg}";
@@ -94,6 +99,19 @@ namespace naps2_net80_3
         {
             string value = GetArgValue(args, key, "");
             return bool.TryParse(value, out bool result) ? result : defaultValue;
+        }
+
+        static ScannerOptions MainArgsScannerOptions(string[] args)
+        {
+            string output = GetArgValue(args, "--output", "");
+
+            return new ScannerOptions
+            {
+                BitDepth = GetArgValue(args, "--bitdepth", "color"),
+                Dpi = GetArgValue(args, "--dpi", "300"),
+                PageSize = GetArgValue(args, "--pagesize", "letter"),
+                Source = GetArgValue(args, "--source", "duplex")
+            };
         }
 
         static string[] DeviceListFromFile()
